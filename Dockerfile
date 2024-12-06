@@ -28,4 +28,5 @@ VOLUME ["/app/db"]
 EXPOSE 5000
 
 # Run the entrypoint script when the container launches
-CMD ["/app/entrypoint.sh"]
+# CMD ["/app/entrypoint.sh"]
+CMD ["/bin/sh"]

@@ -3,7 +3,7 @@ import logging
 import os
 import sqlite3
 
-from meal_max.utils.logger import configure_logger
+from team_tracker.utils.logger import configure_logger
 
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ configure_logger(logger)
 
 
 # load the db path from the environment with a default value
-DB_PATH = os.getenv("DB_PATH", "/app/sql/meal_max.db")
+DB_PATH = os.getenv("DB_PATH", "/app/sql/team_tracker.db")
 
 
 def check_database_connection():
