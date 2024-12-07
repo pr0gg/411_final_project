@@ -40,12 +40,12 @@ else
 fi
 
 # Run the Docker container with the necessary ports and volume mappings
-# echo "Running Docker container..."
-# docker run -d \
-#  --name ${IMAGE_NAME}_container \
-#  --env-file .env \
-#  -p ${HOST_PORT}:${CONTAINER_PORT} \
-#  -v ${DB_VOLUME_PATH}:/app/db \
-#  ${IMAGE_NAME}:${CONTAINER_TAG}
+echo "Running Docker container..."
+docker run -d \
+  --name ${IMAGE_NAME}_container \
+  --env-file .env \
+  -p ${HOST_PORT}:${CONTAINER_PORT} \
+  -v ${DB_VOLUME_PATH}:/app/db \
+  ${IMAGE_NAME}:${CONTAINER_TAG}
 
-# echo "Docker container is running on port ${HOST_PORT}."
+echo "Docker container is running on port ${HOST_PORT}."
