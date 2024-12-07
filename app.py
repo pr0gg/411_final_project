@@ -1,16 +1,23 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
+from team_tracker.utils.sql_utils import initialize_database
+
+
 # from flask_cors import CORS
 
 from team_tracker.models import locker_model
 # from team_tracker.game_model import GameModel
 from team_tracker.utils.sql_utils import check_database_connection, check_table_exists
-
+from team_tracker.models import user_model
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
+initialize_database()
+
+
+
 # This bypasses standard security stuff we'll talk about later
 # If you get errors that use words like cross origin or flight,
 # uncomment this
@@ -57,6 +64,37 @@ def db_check() -> Response:
         return make_response(jsonify({'database_status': 'healthy'}), 200)
     except Exception as e:
         return make_response(jsonify({'error': str(e)}), 404)
+    
+##########################################################
+#
+# User Routes
+#
+##########################################################
+
+
+@app.route('/create-account', methods=['POST'])
+def create_account():
+    """Create new user account."""
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    try:
+        user_model.create_user(username, password)
+        return jsonify({'message': 'Account created'}), 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/login', methods=['POST'])
+def login():
+    """Verify user login."""
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if user_model.verify_user(username, password):
+        return jsonify({'message': 'Login successful'}), 200
+    return jsonify({'error': 'Invalid credentials'}), 401
 
 ##########################################################
 #

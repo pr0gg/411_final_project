@@ -10,8 +10,49 @@ logger = logging.getLogger(__name__)
 configure_logger(logger)
 
 
+
+
 # load the db path from the environment with a default value
-DB_PATH = os.getenv("DB_PATH", "/app/sql/team_tracker.db")
+DB_PATH = os.getenv("DB_PATH", os.path.join(os.getcwd(), "data", "team_tracker.db"))
+
+logger.info(f"Database path is: {DB_PATH}")
+
+def initialize_database():
+    """Create database tables if they don't exist."""
+    try:
+        # Make sure the data directory exists
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Create teams table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS teams (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    team TEXT UNIQUE NOT NULL,
+                    city TEXT NOT NULL,
+                    sport TEXT NOT NULL,
+                    league TEXT NOT NULL
+                );
+            """)
+            
+            # Create users table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    salt TEXT NOT NULL
+                );
+            """)
+            
+            conn.commit()
+            logger.info("Database tables initialized successfully")
+            
+    except sqlite3.Error as e:
+        logger.error("Database initialization error: %s", str(e))
+        raise Exception(f"Failed to initialize database: {e}")
 
 
 def check_database_connection():
@@ -56,3 +97,5 @@ def get_db_connection():
         if conn:
             conn.close()
             logger.info("Database connection closed.")
+
+
