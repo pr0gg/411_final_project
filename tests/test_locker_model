@@ -45,3 +45,36 @@ def mock_cursor(mocker):
 #
 ######################################################
 
+def test_create_team(mock_cursor):
+    """Test creating a new team in the list."""
+
+    # Call the function to create a new song
+    create_team(team="Patriots", city="New England", sport="Football", league="NFL")
+
+    expected_query = normalize_whitespace("""
+        INSERT INTO teams (team, city, sport, league)
+        VALUES (?, ?, ?, ?)
+    """)
+
+    actual_query = normalize_whitespace(mock_cursor.execute.call_args[0][0])
+
+    # Assert that the SQL query was correct
+    assert actual_query == expected_query, "The SQL query did not match the expected structure."
+
+    # Extract the arguments used in the SQL call (second element of call_args)
+    actual_arguments = mock_cursor.execute.call_args[0][1]
+
+    # Assert that the SQL query was executed with the correct arguments
+    expected_arguments = ("Patriots", "New England", "Football", "NFL")
+    assert actual_arguments == expected_arguments, f"The SQL query arguments did not match. Expected {expected_arguments}, got {actual_arguments}."
+
+
+def test_create_team_duplicate(mock_cursor):
+    """Test creating a team with a duplicate team name (should raise an error)."""
+
+    # Simulate that the database will raise an IntegrityError due to a duplicate entry
+    mock_cursor.execute.side_effect = sqlite3.IntegrityError("UNIQUE constraint failed: teams.team")
+
+    # Expect the function to raise a ValueError with a specific message when handling the IntegrityError
+    with pytest.raises(ValueError, match="Team with name 'Patriots' already exists"):
+        create_team(team="Patriots", city="New England", sport="Football", league="NFL")
