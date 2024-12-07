@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 from team_tracker.utils.sql_utils import initialize_database
-
+import requests
 
 # from flask_cors import CORS
 
