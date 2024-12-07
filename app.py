@@ -169,5 +169,21 @@ def add_team() -> Response:
         app.logger.error("Failed to add team: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
+@app.route('/api/get-teams', methods=['GET'])
+def get_nfl_teams():
+    app.logger.info("Retrieving all NFL teams from ESPN")
+    try:
+        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams"
+        response = requests.get(url)
+        data = response.json()
+        teams = {"teams": []}
+        for t in data["sports"][0]["leagues"][0]["teams"]:
+            team = {"id": t["team"]["id"], "name": t["team"]["displayName"]}
+            teams["teams"].append(team)
+        return make_response(jsonify(teams), 200)
+    except Exception as e:
+        app.logger.error("Failed to retrieve NFL teams from ESPN: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
