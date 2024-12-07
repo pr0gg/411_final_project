@@ -96,6 +96,32 @@ def login():
         return jsonify({'message': 'Login successful'}), 200
     return jsonify({'error': 'Invalid credentials'}), 401
 
+@app.route('/update-password', methods=['POST'])
+def update_password():
+    """Update user password."""
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+        
+        if not all([username, old_password, new_password]):
+            return make_response(jsonify({
+                'error': 'Username, old password, and new password required'
+            }), 400)
+            
+        if user_model.update_password(username, old_password, new_password):
+            return make_response(jsonify({
+                'message': 'Password updated successfully'
+            }), 200)
+        else:
+            return make_response(jsonify({
+                'error': 'Invalid username or password'
+            }), 401)
+            
+    except Exception as e:
+        return make_response(jsonify({'error': str(e)}), 500)
+
 ##########################################################
 #
 # Teams

@@ -70,3 +70,32 @@ def verify_user(username: str, password: str) -> bool:
         logger.error("Login error: %s", str(e))
         return False
     
+def update_password(username: str, old_password: str, new_password: str) -> bool:
+    """Update a user's password."""
+    try:
+        # First verify the old password
+        if not verify_user(username, old_password):
+            return False
+            
+        # Generate new salt and hash for the new password
+        salt = generate_salt()
+        new_hash = hash_password(new_password, salt)
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users 
+                SET password_hash = ?, salt = ?
+                WHERE username = ?
+            """, (new_hash, salt, username))
+            conn.commit()
+            
+            logger.info("Password updated for user: %s", username)
+            return True
+            
+    except sqlite3.Error as e:
+        logger.error("Database error during password update: %s", str(e))
+        return False
+    
+
+    
