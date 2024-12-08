@@ -16,6 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 initialize_database()
 
+
+
 # This bypasses standard security stuff we'll talk about later
 # If you get errors that use words like cross origin or flight,
 # uncomment this
@@ -126,45 +128,88 @@ def update_password():
 #
 ##########################################################
 
-@app.route('/api/create-team', methods=['POST'])
-def add_team() -> Response:
+@app.route('/api/add-to-fav', methods=['POST'])
+def add_team_to_fav() -> Response:
     """
-    Route to add a new team to the database.
+    Route to add a new team to favorites.
 
     Expected JSON Input:
-        - team (str): The name of the team (team).
-        - city (str): The home city of the team (e.g., Denver, New York).
-        - sport (str): The sport the team plays (e.g., baseball, hockey).
-        - league (str): The league the team belongs to (e.g., MLB, NBA).
+        - nfl_id (int): The NFL-assigned id of the team.
 
     Returns:
-        JSON response indicating the success of the combatant addition.
+        JSON response indicating the success of adding select team to favorites.
     Raises:
-        400 error if input validation fails.
-        500 error if there is an issue adding the combatant to the database.
+        500 error if there is an issue adding the team to favorites.
     """
-    app.logger.info('Creating new meal')
+    app.logger.info('Adding team to favorites')
     try:
         # Get the JSON data from the request
         data = request.get_json()
 
         # Extract and validate required fields
-        team = data.get('team')
-        city = data.get('city')
-        sport = data.get('sport')
-        league = data.get('league')
+        nfl_id = data.get('nfl_id')
 
-        if not team or not city or not sport or not league:
-            return make_response(jsonify({'error': 'Invalid input, all fields are required with valid values'}), 400)
+        # Call the locker_model function to add the team to favorites
+        app.logger.info('Adding team to favorites: %d', nfl_id)
+        locker_model.add_to_favorites(nfl_id)
 
-        # Call the locker_model function to add the team to the database
-        app.logger.info('Adding team: %s, %s, %s, %s', team, city, sport, league)
-        locker_model.create_team(team, city, sport, league)
-
-        app.logger.info("Team added: %s", team)
-        return make_response(jsonify({'status': 'success', 'team': team}), 201)
+        app.logger.info("Team added: %d", nfl_id)
+        return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
         app.logger.error("Failed to add team: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+
+@app.route('/api/remove-from-fav', methods=['POST'])
+def remove_team_from_fav() -> Response:
+    """
+    Route to remove an existing team from favorites.
+
+    Expected JSON Input:
+        - nfl_id (int): The NFL-assigned id of the team.
+
+    Returns:
+        JSON response indicating the success of removing select team from favorites.
+    Raises:
+        500 error if there is an issue removing the team from favorites.
+    """
+    app.logger.info('Removing team from favorites')
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+
+        # Extract and validate required fields
+        nfl_id = data.get('nfl_id')
+
+        # Call the locker_model function to remove the team from favorites
+        app.logger.info('Removing team from favorites: %d', nfl_id)
+        locker_model.remove_from_favorites(nfl_id)
+
+        app.logger.info("Team removed: %d", nfl_id)
+        return make_response(jsonify({'status': 'success'}), 200)
+    except Exception as e:
+        app.logger.error("Failed to remove team: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+
+@app.route('/api/get-favs', methods=['GET'])
+def get_favorites():
+    """
+    Route to get all NFL teams marked as favorite.
+
+    Expected JSON Input:
+        none
+
+    Returns:
+        JSON response indicating the success of favorites retrieval.
+    Raises:
+        500 error if there is an issue retrieving teams marked as favorite.
+    """
+    app.logger.info("Retrieving all teams marked favorite")
+    try:
+        fav_data = locker_model.get_favorites()
+
+        return make_response(jsonify({'status': 'success', 'favorites': fav_data}), 200)
+    except Exception as e:
+        app.logger.error("Failed to retrieve favorites: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
 @app.route('/api/get-teams', methods=['GET'])
@@ -185,24 +230,23 @@ def get_nfl_teams():
         url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams"
         response = requests.get(url)
         data = response.json()
-        teams = {"teams": []}
         for t in data["sports"][0]["leagues"][0]["teams"]:
             nfl_id = t["team"]["id"]
             team = t["team"]["name"]
             loc = t["team"]["location"]
             locker_model.create_team(team, nfl_id, loc)
-        return make_response(jsonify(teams), 200)
+        return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
         app.logger.error("Failed to retrieve NFL teams from ESPN: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/team-schedule/<int:team_id>', methods=['GET'])
-def team_schedule(team_id: int) -> Response:
+@app.route('/team-schedule/<int:nfl_id>', methods=['GET'])
+def team_schedule(nfl_id: int) -> Response:
     """
     Route to retrieve team schedule by NFL team id.
 
     Expected JSON Input:
-        - team_id (str): The NFL-assigned id of the team.
+        - nfl_id (int): The NFL-assigned id of the team.
 
     Returns:
         JSON response indicating the success of the schedule retrieval.
@@ -211,7 +255,7 @@ def team_schedule(team_id: int) -> Response:
     """
     app.logger.info("Retrieving the team schedule from ESPN")
     try:
-        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_id}/schedule"
+        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{nfl_id}/schedule"
         response = requests.get(url)
         data = response.json()
         events = {"events": []}
@@ -223,13 +267,13 @@ def team_schedule(team_id: int) -> Response:
         app.logger.error("Failed to retrieve the team schedule from ESPN: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/team-roster/<int:team_id>', methods=['GET'])
-def team_roster(team_id: int) -> Response:
+@app.route('/team-roster/<int:nfl_id>', methods=['GET'])
+def team_roster(nfl_id: int) -> Response:
     """
     Route to retrieve team roster by NFL team id.
 
     Expected JSON Input:
-        - team_id (str): The NFL-assigned id of the team.
+        - nfl_id (int): The NFL-assigned id of the team.
 
     Returns:
         JSON response indicating the success of the roster retrieval.
@@ -238,7 +282,7 @@ def team_roster(team_id: int) -> Response:
     """
     app.logger.info("Retrieving the team roster from ESPN")
     try:
-        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_id}/roster"
+        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{nfl_id}/roster"
         response = requests.get(url)
         data = response.json()
         roster = {"athletes": []}
