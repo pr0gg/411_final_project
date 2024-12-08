@@ -16,8 +16,6 @@ load_dotenv()
 app = Flask(__name__)
 initialize_database()
 
-
-
 # This bypasses standard security stuff we'll talk about later
 # If you get errors that use words like cross origin or flight,
 # uncomment this
@@ -171,6 +169,17 @@ def add_team() -> Response:
 
 @app.route('/api/get-teams', methods=['GET'])
 def get_nfl_teams():
+    """
+    Route to add all NFL teams to the database.
+
+    Expected JSON Input:
+        none
+
+    Returns:
+        JSON response indicating the success of the addition of all teams.
+    Raises:
+        500 error if there is an issue retrieving NFL teams from external API.
+    """
     app.logger.info("Retrieving all NFL teams from ESPN")
     try:
         url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams"
@@ -178,11 +187,68 @@ def get_nfl_teams():
         data = response.json()
         teams = {"teams": []}
         for t in data["sports"][0]["leagues"][0]["teams"]:
-            team = {"id": t["team"]["id"], "name": t["team"]["displayName"]}
-            teams["teams"].append(team)
+            nfl_id = t["team"]["id"]
+            team = t["team"]["name"]
+            loc = t["team"]["location"]
+            locker_model.create_team(team, nfl_id, loc)
         return make_response(jsonify(teams), 200)
     except Exception as e:
         app.logger.error("Failed to retrieve NFL teams from ESPN: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+
+@app.route('/team-schedule/<int:team_id>', methods=['GET'])
+def team_schedule(team_id: int) -> Response:
+    """
+    Route to retrieve team schedule by NFL team id.
+
+    Expected JSON Input:
+        - team_id (str): The NFL-assigned id of the team.
+
+    Returns:
+        JSON response indicating the success of the schedule retrieval.
+    Raises:
+        500 error if there is an issue retrieving team schedule from external API.
+    """
+    app.logger.info("Retrieving the team schedule from ESPN")
+    try:
+        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_id}/schedule"
+        response = requests.get(url)
+        data = response.json()
+        events = {"events": []}
+        for e in data["events"]:
+            event = {"week": e["week"]["text"], "date": e["date"], "name": e["name"]}
+            events["events"].append(event)
+        return make_response(jsonify(events), 200)
+    except Exception as e:
+        app.logger.error("Failed to retrieve the team schedule from ESPN: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+
+@app.route('/team-roster/<int:team_id>', methods=['GET'])
+def team_roster(team_id: int) -> Response:
+    """
+    Route to retrieve team roster by NFL team id.
+
+    Expected JSON Input:
+        - team_id (str): The NFL-assigned id of the team.
+
+    Returns:
+        JSON response indicating the success of the roster retrieval.
+    Raises:
+        500 error if there is an issue retrieving team roster from external API.
+    """
+    app.logger.info("Retrieving the team roster from ESPN")
+    try:
+        url = f"https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams/{team_id}/roster"
+        response = requests.get(url)
+        data = response.json()
+        roster = {"athletes": []}
+        for p in data["athletes"]:
+            for a in p["items"]:
+                athlete = {"name": a["displayName"], "age": a["age"], "position": p["position"]}
+                roster["athletes"].append(athlete)
+        return make_response(jsonify(roster), 200)
+    except Exception as e:
+        app.logger.error("Failed to retrieve the team roster from ESPN: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
 if __name__ == '__main__':
