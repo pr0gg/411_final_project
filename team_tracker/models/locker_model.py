@@ -16,19 +16,18 @@ configure_logger(logger)
 class Team:
     id: int
     team: str
-    city: str
-    sport: str
-    league: str
+    nfl_id: str
+    loc: str
 
 
-def create_team(team: str, city: str, sport: str, league: str) -> None:
+def create_team(team: str, nfl_id: str, loc: str) -> None:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO teams (team, city, sport, league)
-                VALUES (?, ?, ?, ?)
-            """, (team, city, sport, league))
+                INSERT INTO teams (team, nfl_id, loc)
+                VALUES (?, ?, ?)
+            """, (team, nfl_id, loc))
             conn.commit()
 
             logger.info("Team successfully added to the database: %s", team)
