@@ -72,7 +72,7 @@ def db_check() -> Response:
 ##########################################################
 
 
-@app.route('/create-account', methods=['POST'])
+@app.route('/api/create-account', methods=['POST'])
 def create_account():
     """Create new user account."""
     data = request.get_json()
@@ -85,7 +85,7 @@ def create_account():
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     """Verify user login."""
     data = request.get_json()
@@ -96,7 +96,7 @@ def login():
         return jsonify({'message': 'Login successful'}), 200
     return jsonify({'error': 'Invalid credentials'}), 401
 
-@app.route('/update-password', methods=['POST'])
+@app.route('/api/update-password', methods=['POST'])
 def update_password():
     """Update user password."""
     try:
@@ -296,4 +296,4 @@ def team_roster(nfl_id: int) -> Response:
         return make_response(jsonify({'error': str(e)}), 500)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

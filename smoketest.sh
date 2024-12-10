@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the base URL for the Flask API
-BASE_URL="http://localhost:5000/api"
+BASE_URL="http://localhost:5001/api"
 
 # Flag to control whether to echo JSON output
 ECHO_JSON=false
@@ -56,11 +56,14 @@ create_account() {
     -H "Content-Type: application/json" \
     -d "{\"username\": \"$UNIQUE_USERNAME\", \"password\": \"$PASSWORD\"}")
   
-  echo "Response: $RESPONSE"  # Debugging output
+  echo "Response: $RESPONSE"
   
   echo "$RESPONSE" | grep -q '"message": "Account created"'
   if [ $? -eq 0 ]; then
     echo "User account created successfully for $UNIQUE_USERNAME."
+    # Export these for use in other functions
+    export TEST_USERNAME=$UNIQUE_USERNAME
+    export TEST_PASSWORD=$PASSWORD
   else
     echo "Failed to create user account."
     exit 1
@@ -72,7 +75,7 @@ login() {
   echo "Logging in with the user account..."
   curl -s -X POST "$BASE_URL/login" \
     -H "Content-Type: application/json" \
-    -d '{"username": "testuser", "password": "testpass"}' | grep -q '"message": "Login successful"'
+    -d "{\"username\": \"$TEST_USERNAME\", \"password\": \"$TEST_PASSWORD\"}" | grep -q '"message": "Login successful"'
   if [ $? -eq 0 ]; then
     echo "User logged in successfully."
   else
@@ -86,9 +89,10 @@ update_password() {
   echo "Updating user password..."
   curl -s -X POST "$BASE_URL/update-password" \
     -H "Content-Type: application/json" \
-    -d '{"username": "testuser", "old_password": "testpass", "new_password": "newpass"}' | grep -q '"message": "Password updated successfully"'
+    -d "{\"username\": \"$TEST_USERNAME\", \"old_password\": \"$TEST_PASSWORD\", \"new_password\": \"newpass\"}" | grep -q '"message": "Password updated successfully"'
   if [ $? -eq 0 ]; then
     echo "Password updated successfully."
+    export TEST_PASSWORD="newpass"  # Update the password for subsequent tests
   else
     echo "Failed to update password."
     exit 1
