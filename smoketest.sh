@@ -99,24 +99,50 @@ update_password() {
   fi
 }
 
-# Function to add a team
-add_team() {
-  echo "Adding a team to the database..."
-  curl -s -X POST "$BASE_URL/create-team" \
+# Function to add a team to favorites
+add_team_to_fav() {
+  echo "Adding a team to favorites..."
+  curl -s -X POST "$BASE_URL/add-to-fav" \
     -H "Content-Type: application/json" \
-    -d '{"team": "Patriots", "city": "New England", "sport": "Football", "league": "NFL"}' | grep -q '"status": "success"'
+    -d '{"nfl_id": 1}' | grep -q '"status": "success"'
   if [ $? -eq 0 ]; then
-    echo "Team added successfully."
+    echo "Team added to favorites."
   else
-    echo "Failed to add team."
+    echo "Failed to add team to favorites."
     exit 1
   fi
 }
 
-# Function to fetch NFL teams from ESPN 
+# Function to remove a team from favorites
+remove_team_from_fav() {
+  echo "Removing a team from favorites..."
+  curl -s -X POST "$BASE_URL/remove-from-fav" \
+    -H "Content-Type: application/json" \
+    -d '{"nfl_id": 1}' | grep -q '"status": "success"'
+  if [ $? -eq 0 ]; then
+    echo "Team removed from favorites."
+  else
+    echo "Failed to remove team from favorites."
+    exit 1
+  fi
+}
+
+# Function to get all favorite teams
+get_favorites() {
+  echo "Fetching favorite teams..."
+  curl -s -X GET "$BASE_URL/get-favs" | grep -q '"status": "success"'
+  if [ $? -eq 0 ]; then
+    echo "Favorites fetched successfully."
+  else
+    echo "Failed to fetch favorites."
+    exit 1
+  fi
+}
+
+# Function to fetch all NFL teams from ESPN
 get_nfl_teams() {
-  echo "Fetching NFL teams from ESPN API..."
-  curl -s -X GET "$BASE_URL/get-teams" | grep -q '"teams"'
+  echo "Fetching NFL teams from ESPN..."
+  curl -s -X GET "$BASE_URL/get-teams" | grep -q '"status": "success"'
   if [ $? -eq 0 ]; then
     echo "NFL teams fetched successfully."
   else
@@ -125,13 +151,42 @@ get_nfl_teams() {
   fi
 }
 
+# Function to fetch the schedule for a specific NFL team
+team_schedule() {
+  echo "Fetching schedule for team with nfl_id 1..."
+  curl -s -X GET "$BASE_URL/team-schedule/1" | grep -q '"events"'
+  if [ $? -eq 0 ]; then
+    echo "Team schedule fetched successfully."
+  else
+    echo "Failed to fetch team schedule."
+    exit 1
+  fi
+}
+
+# Function to fetch the roster for a specific NFL team
+team_roster() {
+  echo "Fetching roster for team with nfl_id 1..."
+  curl -s -X GET "$BASE_URL/team-roster/1" | grep -q '"athletes"'
+  if [ $? -eq 0 ]; then
+    echo "Team roster fetched successfully."
+  else
+    echo "Failed to fetch team roster."
+    exit 1
+  fi
+}
+
+
 # Run smoketests
 healthcheck
 db_check
 create_account
 login
 update_password
-add_team
+add_team_to_fav
+remove_team_from_fav
+get_favorites
 get_nfl_teams
+team_schedule
+team_roster
 
 echo "Yay! All tests passed successfully!"
