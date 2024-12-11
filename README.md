@@ -4,6 +4,8 @@
 An NFL team-tracking platform which allows the user to construct and manage their own set of their favorite teams. It is designed to help football fans get details about teams of interest and track teams based on a number of characteristics.
 
 ## Description of each route:
+
+
 Route: /create-account
 Request Type1: POST
 Purpose: Creates a new user account with a username and password.
@@ -20,6 +22,7 @@ Request: curl -X POST http://localhost:5001/create-account
  -d '{ "username": "newuser123", "password": "securepassword" }'
 Response: { "message": "Account created successfully", "status": "200" }
 
+----------
 
 Route: /login
 Request Type POST
@@ -36,6 +39,8 @@ Request: curl -X POST http://localhost:5001/login
  -H "Content-Type: application/json"
  -d '{ "username": "testuser", "password": "testpass123" }'
 Response: { "message": "Login successful" }
+
+----------
 
 Route: /update-password
 Request Type POST
@@ -55,6 +60,8 @@ Request: curl -X POST http://localhost:5001/update-password
  -d '{ "username": "testuser", "old_password": "testpass123", "new_password": "newpass456" }'
 Response: { "message": "Password updated successfully" }
 
+----------
+
 Route: /api/add-to-fav
 Request Type: POST
 Purpose: Toggles favorite characteristic of select team to true.
@@ -68,6 +75,8 @@ Request: curl -X POST http://localhost:5000/api/add-to-fav
  -H "Content-Type: application/json"
  -d '{ "nfl_id": "22" }'
 Response: { "status": "success" }
+
+----------
 
 Route: /api/remove-from-fav
 Request Type: POST
@@ -83,6 +92,8 @@ Request: curl -X POST http://localhost:5000/api/remove-from-fav
  -d '{ "nfl_id": "22" }'
 Response: { "status": "success" }
 
+----------
+
 Route: /api/get-favs
 Request Type: GET
 Purpose: Retrieves all teams marked as favorite.
@@ -96,6 +107,8 @@ Example:
 Request: curl -X GET http://localhost:5000/api/get-favs
  -H "Content-Type: application/json"
 Response: {"favorites": [],"status": "success"}
+
+----------
 
 Route: /api/get-teams
 Request Type: GET
@@ -111,6 +124,8 @@ Request: curl -X GET http://localhost:5000/api/get-teams
  -H "Content-Type: application/json"
 Response:  {"teams": [{"id": "22","name": "Arizona Cardinals"},{"id": "1","name": "Atlanta Falcons"}]}
 
+----------
+
 Route: /team-schedule/<int:team_id>
 Request Type: GET
 Purpose: Displays team game schedule based on selected NFL-assigned team ID
@@ -125,6 +140,8 @@ Request: curl -X GET http://localhost:5000/team-schedule/22
  -H "Content-Type: application/json"
  -d '{ "nfl_id": "22" }'
 Response: {"events": [{"date": "2024-09-08T17:00Z","name": "Arizona Cardinals at Buffalo Bills","week": "Week 1"},{"date": "2024-09-15T20:05Z","name": "Los Angeles Rams at Arizona Cardinals","week": "Week 2"}]}
+
+----------
 
 Route: /team-roster/<int:team_id>
 Request Type: GET
