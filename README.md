@@ -1,5 +1,6 @@
 # 411 Final Project
 
+
 ## High Level Description: 
 An NFL team-tracking platform which allows the user to construct and manage their own set of their favorite teams. It is designed to help football fans get details about teams of interest and track teams based on a number of characteristics.
 
